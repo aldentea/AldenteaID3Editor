@@ -163,6 +163,12 @@ namespace Aldentea.ID3Editor.RIFF
 			WriteToFile(dstFilename);
 		}
 
+		// (0.1.0)
+		public async Task WriteToAsync(string dstFileName)
+		{
+			await WriteToFileAsync(dstFileName);
+		}
+
 		public void Merge(IID3Tag another_tag)
 		{
 			throw new NotImplementedException("Just a moment.");

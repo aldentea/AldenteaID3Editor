@@ -409,6 +409,41 @@ namespace Aldentea.ID3Editor
 		}
 		#endregion
 
+		// (0.1.0)とりあえずWriteのみasync化。
+		public async Task WriteToAsync(string dstFileName)
+		{
+			if (!File.Exists(dstFileName))
+			{
+				// どうしてくれよう？
+			}
+
+
+			string tempFilename = Path.GetTempFileName();
+			using (var tempFile = new FileStream(dstFileName, FileMode.Open))
+			{
+			
+				using (BinaryReader reader = new BinaryReader(tempFile))
+				{
+					bool exists = Exists(reader);
+
+					using (BinaryWriter writer = new BinaryWriter(new FileStream(tempFilename, FileMode.CreateNew)))
+					{
+						reader.BaseStream.Seek(0, SeekOrigin.Begin);
+
+						var bytes = reader.ReadBytes(Convert.ToInt32(reader.BaseStream.Length - (exists ? 128 : 0)));
+						await tempFile.WriteAsync(bytes, 0, bytes.Length);
+
+						bytes = this.GetBytes();
+						writer.Write(bytes, 0, bytes.Length);
+					}
+				}
+			}
+
+			File.Delete(dstFileName);
+			File.Move(tempFilename, dstFileName);
+
+		}
+
 		// 05/15/2007 by aldente
 		#region *バイト列にエンコード(GetBytes)
 		/// <summary>

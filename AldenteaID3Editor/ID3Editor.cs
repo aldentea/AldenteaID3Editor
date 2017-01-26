@@ -115,6 +115,29 @@ namespace Aldentea.ID3Editor
 
 		#endregion
 
+		public static async void UpdateAsync(string fileName, IID3Tag newTag)
+		{
+			var original_tag = ReadFile(fileName);
+			if (original_tag == null)
+			{
+				await newTag.WriteToAsync(fileName);
+			}
+			else
+			{
+				// 元のタグに新しいタグの情報を書き込んで保存する．
+				// 全てを更新していいのか？
+				original_tag.Title = newTag.Title;
+				original_tag.Artist = newTag.Artist;
+				original_tag.SabiPos = newTag.SabiPos;
+				//tag.StartPos = startpos;
+				//tag.StopPos = stoppos;
+
+				await original_tag.WriteToAsync(fileName);
+			}
+
+		}
+
+
 		// 09/17/2014 by aldentea
 		#region *[static]冒頭にあるタグのサイズを取得(GetHeaderTagSize)
 		/// <summary>

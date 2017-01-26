@@ -17,6 +17,10 @@ namespace Aldentea.ID3Editor
 		decimal StopPos { get; set; }
 
 		void WriteTo(string dstFilename);
+
+		// (0.1.0)
+		Task WriteToAsync(string dstFileName);
+
 		void Merge(IID3Tag another_tag);
 	}
 	#endregion

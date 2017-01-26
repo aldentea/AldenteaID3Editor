@@ -170,6 +170,25 @@ namespace Aldentea.ID3Editor.RIFF
 		}
 		#endregion
 
+		// (0.1.0)
+		public async Task WriteAsync(Stream writer)
+		{
+			var buff = name.GetBytes();
+			await writer.WriteAsync(buff, 0, buff.Length);
+			buff = GetDataSizeBytes();
+			await writer.WriteAsync(buff, 0, buff.Length);
+
+			int size = GetDataSize();
+			buff = GetDataBytes();
+			await writer.WriteAsync(buff, 0, buff.Length);
+			if (size % 2 == 1)
+			{
+				// パディングを行う．
+				await writer.WriteAsync(new byte[] { 0x00 }, 0, 1);
+			}
+
+		}
+
 	}
 	#endregion
 

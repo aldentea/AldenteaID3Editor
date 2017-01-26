@@ -67,6 +67,15 @@ namespace Aldentea.ID3Editor.RIFF
 			}
 		}
 
+		// (0.1.0)
+		public async Task WriteToFileAsync(string dstFileName)
+		{
+			using (FileStream writer = new FileStream(dstFileName, FileMode.Create))
+			{
+				await WriteAsync(writer);
+			}
+		}
+
 		// 03/10/2008 by aldente
 		public static RIFFChunk ReadFromFile(string srcFileName, string type_name)
 		{

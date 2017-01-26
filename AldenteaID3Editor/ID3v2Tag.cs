@@ -592,6 +592,62 @@ namespace Aldentea.ID3Editor
 		}
 		#endregion
 
+		// (0.1.0)
+		public async Task WriteToAsync(string dstFileName)
+		{
+			if (!File.Exists(dstFileName))
+			{
+				// どうしてくれよう？
+			}
+
+			bool v1_exists = ID3v1Tag.Exists(dstFileName);
+
+			string tempFilename = Path.GetTempFileName();
+
+			using (ID3Reader reader = new ID3Reader(new FileStream(dstFileName, FileMode.Open)))
+			{
+				bool exists = Exists(reader);
+				int old_tag_size = exists ? Generate(reader, true).GetTotalSize() : 0;
+
+				// 11/10/2008 by aldente
+				// FileModeをCreateNewからCreateに変更．
+
+				using (var tempFile = new FileStream(tempFilename, FileMode.Create))
+				{
+					ID3v1Tag v1Tag;
+
+					// タグを書き込む。
+					var bytes = this.GetBytes(this.char_code, 0x100);
+					await tempFile.WriteAsync(bytes, 0, bytes.Length);
+
+					// 本体を書き込む．
+					reader.BaseStream.Seek(old_tag_size, SeekOrigin.Begin);
+					if (v1_exists)
+					{
+						bytes = reader.ReadBytes((int)reader.BaseStream.Length - old_tag_size - 128);
+						await tempFile.WriteAsync(bytes, 0, bytes.Length);
+						v1Tag = new ID3v1Tag(reader, false);
+					}
+					else
+					{
+						bytes = reader.ReadBytes((int)reader.BaseStream.Length - old_tag_size);
+						await tempFile.WriteAsync(bytes, 0, bytes.Length);
+						v1Tag = new ID3v1Tag();
+					}
+					// ID3v1タグを書き込む．
+					v1Tag.Title = this.Title;
+					v1Tag.Artist = this.Artist;
+					byte[] buf = v1Tag.GetBytes();
+					await tempFile.WriteAsync(buf, 0, buf.Length);
+
+				}
+			}
+			File.Delete(dstFileName);
+			File.Move(tempFilename, dstFileName);
+			
+		}
+
+
 		// 05/16/2007 by aldente
 		#region *synchsafe整数をInt32に変換(ConvertSynchsafeIntToInt32)
 		/// <summary>
