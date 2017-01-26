@@ -115,7 +115,7 @@ namespace Aldentea.ID3Editor
 
 		#endregion
 
-		public static async void UpdateAsync(string fileName, IID3Tag newTag)
+		public static async Task UpdateAsync(string fileName, IID3Tag newTag)
 		{
 			var original_tag = ReadFile(fileName);
 			if (original_tag == null)
