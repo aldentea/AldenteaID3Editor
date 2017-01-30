@@ -23,6 +23,16 @@ namespace Aldentea.ID3Editor.Otameshi
 		public MainWindow()
 		{
 			InitializeComponent();
+			var time = 16384;
+			var address = System.Net.IPAddress.HostToNetworkOrder(time);
+			var bytes = new System.Net.IPAddress(address).GetAddressBytes();
+			System.Diagnostics.Debug.WriteLine(time);
+			System.Diagnostics.Debug.WriteLine(address);
+			System.Diagnostics.Debug.WriteLine(bytes.Length);
+			System.Diagnostics.Debug.WriteLine(bytes[0]);
+			System.Diagnostics.Debug.WriteLine(bytes[1]);
+			System.Diagnostics.Debug.WriteLine(bytes[2]);
+			System.Diagnostics.Debug.WriteLine(bytes[3]);
 		}
 	}
 }

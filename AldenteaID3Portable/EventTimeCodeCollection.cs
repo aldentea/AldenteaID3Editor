@@ -10,7 +10,8 @@ namespace Aldentea.ID3Portable
 	#region EventTimeCodeCollectionクラス
 	public class EventTimeCodeCollection
 	{
-		SortedList<int, byte> event_time_codes = new SortedList<int, byte>();
+		//SortedList<int, byte> event_time_codes = new SortedList<int, byte>();
+		Dictionary<int, byte> event_time_codes = new Dictionary<int, byte>();
 
 		// ※ミリ秒単位の場合しかサポートしないということか！？
 		private TimeUnit timeStampUnit = TimeUnit.Milliseconds;
@@ -173,12 +174,16 @@ namespace Aldentea.ID3Portable
 			{
 				// すでにイベントがある場合，それをいったん削除する．
 				// ...ってまたループかよorz
-				int i = event_time_codes.IndexOfValue(type);  // O(n)ループだってさ．
-				if (i > -1)
+				//int i = event_time_codes.IndexOfValue(type);  // O(n)ループだってさ．
+				//if (i > -1)
+				//{
+				//	event_time_codes.RemoveAt(i);
+				//}
+				if (event_time_codes.ContainsValue(type))
 				{
-					event_time_codes.RemoveAt(i);
+					var key = event_time_codes.First(e => e.Value == type).Key;
+					event_time_codes.Remove(key);
 				}
-
 			}
 			AddEvent(type, time);
 		}
@@ -217,7 +222,11 @@ namespace Aldentea.ID3Portable
 			while (size > 0)
 			{
 				byte type = reader.ReadByte();
-				int time = System.Net.IPAddress.NetworkToHostOrder(reader.ReadInt32());
+				// reader.ReadInt32は、読み込んだバイト列をリトルエンディアンとして扱う。
+				// しかしここではビッグエンディアンで記録されている。
+				//int time = System.Net.IPAddress.NetworkToHostOrder(reader.ReadInt32());
+				var bytes = reader.ReadBytes(4);
+				var time = bytes[0] + bytes[1] << 8 + bytes[2] << 16 + bytes[3] << 24;
 				AddEvent(type, ConvertOut(time));
 				size -= 5;
 			}
@@ -260,9 +269,11 @@ namespace Aldentea.ID3Portable
 				case TimeUnit.Frames:
 					throw new NotImplementedException("MPEGフレーム単位のタイムスタンプフォーマットには未対応ナリ！");
 				case TimeUnit.Milliseconds:
-					int time_stamp = Convert.ToInt32(time);
-					//int time_stamp = Convert.ToInt32(time * 1000);
-					return new System.Net.IPAddress(System.Net.IPAddress.HostToNetworkOrder(Convert.ToInt64(time_stamp) << 32)).GetAddressBytes();
+					// ※何をやってるのか全然わからん。
+					long time_stamp = Convert.ToInt64(Convert.ToInt32(time)) << 32;
+					//return new System.Net.IPAddress(System.Net.IPAddress.HostToNetworkOrder(time_stamp).GetAddressBytes();
+					// ※とりあえず。
+					return new byte[] { 0x00, 0x00, 0x00, 0x00 };
 			}
 			// ここには来ない！
 			return new byte[0];

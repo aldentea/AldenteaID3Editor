@@ -160,8 +160,9 @@ namespace Aldentea.ID3Portable
 			{
 				using (MemoryStream ms = new MemoryStream())
 				{
+					var ascii = Encoding.GetEncoding("ASCII");
 					// 識別名出力
-					ms.Write(Encoding.ASCII.GetBytes(Name), 0, Name.Length);
+					ms.Write(ascii.GetBytes(Name), 0, Name.Length);
 
 					// サイズ出力
 					ms.Write(SizeToBytes(frame_size), 0, 3);
