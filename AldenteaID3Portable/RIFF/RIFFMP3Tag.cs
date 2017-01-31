@@ -48,13 +48,13 @@ namespace Aldentea.ID3Portable.RIFF
 		}
 
 		// 03/10/2008 by aldente
-		public new static RIFFMP3Tag ReadFromFile(string srcFileName)
-		{
-			using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
-			{
-				return new RIFFMP3Tag(reader);
-			}
-		}
+		//public new static RIFFMP3Tag ReadFromFile(string srcFileName)
+		//{
+		//	using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
+		//	{
+		//		return new RIFFMP3Tag(reader);
+		//	}
+		//}
 
 		// 03/11/2008 by aldente
 		protected override TypeInfo GetListChunkType(string type_name)
@@ -158,15 +158,15 @@ namespace Aldentea.ID3Portable.RIFF
 		#endregion
 
 		// 03/10/2008 by aldente
-		public void WriteTo(string dstFilename)
-		{
-			WriteToFile(dstFilename);
-		}
+		//public void WriteTo(string dstFilename)
+		//{
+		//	WriteToFile(dstFilename);
+		//}
 
 		// (0.1.0)
-		public async Task WriteToAsync(string dstFileName)
+		public async Task WriteToAsync(ID3Reader reader, BinaryWriter tempWriter)
 		{
-			await WriteToFileAsync(dstFileName);
+			await WriteToAsync(reader, tempWriter);
 		}
 
 		public void Merge(IID3Tag another_tag)

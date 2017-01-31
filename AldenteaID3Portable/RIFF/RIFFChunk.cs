@@ -59,38 +59,38 @@ namespace Aldentea.ID3Portable.RIFF
 		#endregion
 
 		// 03/10/2008 by aldente
-		public void WriteToFile(string dstFileName)
-		{
-			using (FileStream writer = new FileStream(dstFileName, FileMode.Create))
-			{
-				Write(writer);
-			}
-		}
+		//public void WriteToFile(string dstFileName)
+		//{
+		//	using (FileStream writer = new FileStream(dstFileName, FileMode.Create))
+		//	{
+		//		Write(writer);
+		//	}
+		//}
 
 		// (0.1.0)
-		public async Task WriteToFileAsync(string dstFileName)
-		{
-			using (FileStream writer = new FileStream(dstFileName, FileMode.Create))
-			{
-				await WriteAsync(writer);
-			}
-		}
+		//public async Task WriteToFileAsync(string dstFileName)
+		//{
+		//	using (FileStream writer = new FileStream(dstFileName, FileMode.Create))
+		//	{
+		//		await WriteAsync(writer);
+		//	}
+		//}
 
 		// 03/10/2008 by aldente
-		public static RIFFChunk ReadFromFile(string srcFileName, string type_name)
-		{
-			using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
-			{
-				return new RIFFChunk(type_name, reader);
-			}
-		}
+		//public static RIFFChunk ReadFromFile(string srcFileName, string type_name)
+		//{
+		//	using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
+		//	{
+		//		return new RIFFChunk(type_name, reader);
+		//	}
+		//}
 
 		// 03/12/2008 by aldente : readerをStreamからBinaryReaderに変更．
 		// 03/11/2008 by aldente
-		public static RIFFChunk ReadFromFile(string srcFileName)
+		public static RIFFChunk ReadFromFile(BinaryReader reader)
 		{
-			using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
-			{
+			//using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
+			//{
 				byte[] buf = new byte[4];
 
 				reader.Read(buf, 0, 4);
@@ -108,7 +108,7 @@ namespace Aldentea.ID3Portable.RIFF
 
 				return new RIFFChunk(type_name, reader, chunk_data_size);
 			}
-		}
+		//}
 	}
 	#endregion
 
