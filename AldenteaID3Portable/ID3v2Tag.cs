@@ -682,13 +682,18 @@ namespace Aldentea.ID3Portable
 				ms.Write(ascii.GetBytes("ID3"), 0, 3);
 				ms.Write(GetVersion(), 0, 2);
 				ms.WriteByte(GetFlags());
-				ms.Write(
-					new System.Net.IPAddress(
-						System.Net.IPAddress.HostToNetworkOrder(
-							ConvertInt32ToSynchsafeInt(main_size)
-						)
-					).GetAddressBytes(), 0, 4);
-
+				//ms.Write(
+				//	new System.Net.IPAddress(
+				//		System.Net.IPAddress.HostToNetworkOrder(
+				//			ConvertInt32ToSynchsafeInt(main_size)
+				//		)
+				//	).GetAddressBytes(), 0, 4);
+				var converted_size = ConvertInt32ToSynchsafeInt(main_size);
+				var b0 = (byte)(converted_size >> 24);
+				var b1 = (byte)(converted_size << 8 >> 24);
+				var b2 = (byte)(converted_size << 16 >> 24);
+				var b3 = (byte)(converted_size % 256);
+				ms.Write(new byte[4] { b0, b1, b2, b3 }, 0, 4);
 				// ※拡張ヘッダは当分無視？
 
 				return ms.ToArray();

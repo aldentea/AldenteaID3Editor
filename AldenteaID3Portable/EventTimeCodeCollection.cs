@@ -221,7 +221,7 @@ namespace Aldentea.ID3Portable
 				byte type = reader.ReadByte();
 				//int time = System.Net.IPAddress.NetworkToHostOrder(reader.ReadInt32());
 				byte[] time_bytes = reader.ReadBytes(4);
-				int time = time_bytes[0] << 24 + time_bytes[1] << 16 + time_bytes[2] << 8 + time_bytes[3];
+				int time = (time_bytes[0] << 24) + (time_bytes[1] << 16) + (time_bytes[2] << 8) + time_bytes[3];
 				AddEvent(type, ConvertOut(time));
 				size -= 5;
 			}
