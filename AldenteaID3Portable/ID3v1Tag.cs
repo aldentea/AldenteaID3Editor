@@ -22,6 +22,8 @@ namespace Aldentea.ID3Portable
 		protected byte track_no = 0;
 		protected byte genre_no = 0x00;
 
+		static Encoding ascii = Encoding.GetEncoding("ASCII");
+
 		#region IID3Tag実装
 
 		#region *Artistプロパティ
@@ -236,7 +238,7 @@ namespace Aldentea.ID3Portable
 			}
 			reader.BaseStream.Seek(size - 128, SeekOrigin.Begin);
 			byte[] buf = reader.ReadBytes(3);
-			return (Encoding.ASCII.GetString(buf) == "TAG");
+			return (ascii.GetString(buf, 0, 3) == "TAG");
 		}
 		#endregion
 
@@ -359,7 +361,7 @@ namespace Aldentea.ID3Portable
 				newbuf[i] = buf[i];
 			}
 
-			return sjisEncoding.GetString(newbuf);
+			return sjisEncoding.GetString(newbuf, 0, n);
 		}
 		#endregion
 
@@ -450,7 +452,7 @@ namespace Aldentea.ID3Portable
 			//MemoryStream ms = new MemoryStream(128);
 
 			// "TAG"(識別子)
-			Encoding.ASCII.GetBytes("TAG").CopyTo(content, 0);
+			ascii.GetBytes("TAG").CopyTo(content, 0);
 			//ms.Write(Encoding.ASCII.GetBytes("TAG"), 0, 3);
 			// title
 			//int n = title.Length;
@@ -466,7 +468,7 @@ namespace Aldentea.ID3Portable
 			// year
 			if (year > 0)
 			{
-				Encoding.ASCII.GetBytes(year.ToString()).CopyTo(content, 93);
+				ascii.GetBytes(year.ToString()).CopyTo(content, 93);
 			}
 
 			// comment
@@ -601,9 +603,9 @@ namespace Aldentea.ID3Portable
 				{
 					reader.BaseStream.Seek(size - 128 - 9 - 6, SeekOrigin.Begin);
 					byte[] buf = reader.ReadBytes(9 + 6);
-					if (Encoding.ASCII.GetString(buf, 6, 9) == "LYRICS200")
+					if (ascii.GetString(buf, 6, 9) == "LYRICS200")
 					{
-						return Convert.ToInt32(Encoding.ASCII.GetString(buf, 0, 6));
+						return Convert.ToInt32(ascii.GetString(buf, 0, 6));
 					}
 				}
 				return 0;
@@ -617,7 +619,7 @@ namespace Aldentea.ID3Portable
 				reader.BaseStream.Seek(-size - 6 - 9, SeekOrigin.Current);
 
 				byte[] buf = reader.ReadBytes(11);
-				if (Encoding.ASCII.GetString(buf) == "LYRICSBEGIN")
+				if (ascii.GetString(buf, 0, 11) == "LYRICSBEGIN")
 				{
 					size -= 11;
 					// フィールドレコードを読み取る．

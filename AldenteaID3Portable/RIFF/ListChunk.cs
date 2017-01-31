@@ -169,14 +169,14 @@ namespace Aldentea.ID3Portable.RIFF
 				Chunk new_child_chunk = null;
 			
 				reader.Read(buf, 0, 4);
-				string chunk_id = Encoding.ASCII.GetString(buf);
+				string chunk_id = ascii.GetString(buf, 0, 4);
 				//int chunk_data_size = ReadInt32(reader);
 				int chunk_data_size = reader.ReadInt32();
 
 				if (chunk_id == list_chunk_name)
 				{
 					reader.Read(buf, 0, 4);
-					string type_name = Encoding.ASCII.GetString(buf);
+					string type_name = ascii.GetString(buf, 0, 4);
 					// タイプ名によって生成するチャンク型を決定．
 					TypeInfo new_chunk_type = GetListChunkType(type_name);
 					if (new_chunk_type.IsSubclassOf(typeof(ListChunk)))

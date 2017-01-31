@@ -86,7 +86,7 @@ namespace Aldentea.ID3Portable.RIFF
 		{
 			byte[] buf = new byte[size];
 			reader.Read(buf, 0, size);
-			data = my_encoding.GetString(buf).TrimEnd('\0');
+			data = my_encoding.GetString(buf, 0, size).TrimEnd('\0');
 
 			if (size % 2 == 1)
 			{

@@ -23,6 +23,8 @@ namespace Aldentea.ID3Portable
 		protected BitArray flags;
 		protected byte[] extended_header = null;
 
+		protected static Encoding ascii = Encoding.GetEncoding("ASCII");
+
 		#region *CharCodeプロパティ
 		/// <summary>
 		/// 出力時の文字コードを取得／設定します．
@@ -230,7 +232,7 @@ namespace Aldentea.ID3Portable
 			// 先頭3バイトを読み込む．
 			reader.BaseStream.Seek(0, SeekOrigin.Begin);
 			byte[] buf = reader.ReadBytes(3);
-			return (Encoding.ASCII.GetString(buf) == "ID3");
+			return (ascii.GetString(buf, 0, 3) == "ID3");
 		}
 		#endregion
 
@@ -278,7 +280,7 @@ namespace Aldentea.ID3Portable
 		protected bool ReadFrame(ID3Reader reader)
 		{
 			// フレーム名を読み込む．
-			string name = Encoding.ASCII.GetString(reader.ReadBytes(frame_name_size));
+			string name = ascii.GetString(reader.ReadBytes(frame_name_size), 0, frame_name_size);
 			//string name = Encoding.ASCII.GetString(reader.ReadBytes((int)this.GetType().GetField("frame_name_size", System.Reflection.BindingFlags.FlattenHierarchy).GetValue(null)));
 			// "The frame ID made out of the characters capital A-Z and 0-9."
 			// なんだけど，半角空白を使う人がいるようなので，一応それにも対応しておく．
@@ -677,7 +679,7 @@ namespace Aldentea.ID3Portable
 		{
 			using (MemoryStream ms = new MemoryStream())
 			{
-				ms.Write(Encoding.ASCII.GetBytes("ID3"), 0, 3);
+				ms.Write(ascii.GetBytes("ID3"), 0, 3);
 				ms.Write(GetVersion(), 0, 2);
 				ms.WriteByte(GetFlags());
 				ms.Write(

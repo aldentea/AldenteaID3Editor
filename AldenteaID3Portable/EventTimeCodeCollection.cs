@@ -10,7 +10,8 @@ namespace Aldentea.ID3Portable
 	#region EventTimeCodeCollectionクラス
 	public class EventTimeCodeCollection
 	{
-		SortedList<int, byte> event_time_codes = new SortedList<int, byte>();
+		//SortedList<int, byte> event_time_codes = new SortedList<int, byte>();
+		Dictionary<int, byte> event_time_codes = new Dictionary<int, byte>();
 
 		// ※ミリ秒単位の場合しかサポートしないということか！？
 		private TimeUnit timeStampUnit = TimeUnit.Milliseconds;
@@ -169,16 +170,17 @@ namespace Aldentea.ID3Portable
 		/// <param name="time">イベントの時刻(秒単位)．</param>
 		public void UpdateEvent(byte type, decimal time)
 		{
-			if (GetTime(type) > -1.0M)
+			var old_time = GetTime(type);
+			if (old_time > -1.0M)
 			{
 				// すでにイベントがある場合，それをいったん削除する．
 				// ...ってまたループかよorz
-				int i = event_time_codes.IndexOfValue(type);  // O(n)ループだってさ．
-				if (i > -1)
-				{
-					event_time_codes.RemoveAt(i);
-				}
-
+				//int i = event_time_codes.IndexOfValue(type);  // O(n)ループだってさ．
+				//if (i > -1)
+				//{
+				//	event_time_codes.RemoveAt(i);
+				//}
+				event_time_codes.Remove(ConvertIn(old_time));
 			}
 			AddEvent(type, time);
 		}
@@ -217,7 +219,9 @@ namespace Aldentea.ID3Portable
 			while (size > 0)
 			{
 				byte type = reader.ReadByte();
-				int time = System.Net.IPAddress.NetworkToHostOrder(reader.ReadInt32());
+				//int time = System.Net.IPAddress.NetworkToHostOrder(reader.ReadInt32());
+				byte[] time_bytes = reader.ReadBytes(4);
+				int time = time_bytes[0] << 24 + time_bytes[1] << 16 + time_bytes[2] << 8 + time_bytes[3];
 				AddEvent(type, ConvertOut(time));
 				size -= 5;
 			}
@@ -261,8 +265,12 @@ namespace Aldentea.ID3Portable
 					throw new NotImplementedException("MPEGフレーム単位のタイムスタンプフォーマットには未対応ナリ！");
 				case TimeUnit.Milliseconds:
 					int time_stamp = Convert.ToInt32(time);
-					//int time_stamp = Convert.ToInt32(time * 1000);
-					return new System.Net.IPAddress(System.Net.IPAddress.HostToNetworkOrder(Convert.ToInt64(time_stamp) << 32)).GetAddressBytes();
+					//return new System.Net.IPAddress(System.Net.IPAddress.HostToNetworkOrder(Convert.ToInt64(time_stamp) << 32)).GetAddressBytes();
+					var b0 = (byte)(time_stamp >> 24);
+					var b1 = (byte)(time_stamp << 8 >> 24);
+					var b2 = (byte)(time_stamp << 16 >> 24);
+					var b3 = (byte)(time_stamp % 256);
+					return new byte[4] { b0, b1, b2, b3 };
 			}
 			// ここには来ない！
 			return new byte[0];

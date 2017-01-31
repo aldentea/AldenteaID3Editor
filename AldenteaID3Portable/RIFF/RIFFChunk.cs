@@ -29,7 +29,7 @@ namespace Aldentea.ID3Portable.RIFF
 			Byte[] buf = new byte[4];
 
 			reader.Read(buf, 0, 4);
-			if (Encoding.ASCII.GetString(buf) != RIFF_chunk_name)
+			if (ascii.GetString(buf, 0, 4) != RIFF_chunk_name)
 			{
 				// RIFF形式ぢゃない！
 				throw new Exception("RIFF形式ぢゃないよ！");
@@ -38,7 +38,7 @@ namespace Aldentea.ID3Portable.RIFF
 			int chunk_data_size = reader.ReadInt32();
 
 			reader.Read(buf, 0, 4);
-			string type_name = Encoding.ASCII.GetString(buf);
+			string type_name = ascii.GetString(buf, 0, 4);
 			// ※type_nameを検証？
 			if (type_name != data_type)
 			{
@@ -94,7 +94,7 @@ namespace Aldentea.ID3Portable.RIFF
 				byte[] buf = new byte[4];
 
 				reader.Read(buf, 0, 4);
-				if (Encoding.ASCII.GetString(buf) != RIFF_chunk_name)
+				if (ascii.GetString(buf, 0, 4) != RIFF_chunk_name)
 				{
 					// RIFF形式ぢゃない！
 					throw new Exception("RIFF形式ぢゃないよ！");
@@ -103,7 +103,7 @@ namespace Aldentea.ID3Portable.RIFF
 				int chunk_data_size = reader.ReadInt32();
 
 				reader.Read(buf, 0, 4);
-				string type_name = Encoding.ASCII.GetString(buf);
+				string type_name = ascii.GetString(buf, 0, 4);
 				// ※type_nameを検証？
 
 				return new RIFFChunk(type_name, reader, chunk_data_size);

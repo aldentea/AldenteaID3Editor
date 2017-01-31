@@ -13,6 +13,7 @@ namespace Aldentea.ID3Portable.RIFF
 	public abstract class Chunk
 	{
 		protected FOURCC name = new FOURCC();
+		protected static Encoding ascii = Encoding.GetEncoding("ASCII");
 
 		// 03/07/2008 by aldente
 		#region *[virtual]Nameプロパティ

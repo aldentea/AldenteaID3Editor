@@ -5,11 +5,11 @@
     <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E096C043-34F1-4157-86B6-D9E5980E3D3B}</ProjectGuid>
+    <ProjectGuid>{28A20B3B-0C76-4223-A2C0-00A3B5AA0AE2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Aldentea.ID3Portable</RootNamespace>
-    <AssemblyName>AldenteaID3Portable</AssemblyName>
+    <RootNamespace>ClassLibraryPortable</RootNamespace>
+    <AssemblyName>ClassLibraryPortable</AssemblyName>
     <DefaultLanguage>ja-JP</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -34,32 +34,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="project.json" />
     <!-- A reference to the entire .NET Framework is automatically included -->
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EventTimeCodeCollection.cs" />
-    <Compile Include="IBinaryFrame.cs" />
-    <Compile Include="ID3Editor.cs" />
-    <Compile Include="ID3Reader.cs" />
-    <Compile Include="ID3v1Tag.cs" />
-    <Compile Include="ID3v22Tag.cs" />
-    <Compile Include="ID3v23Tag.cs" />
-    <Compile Include="ID3v2Tag.cs" />
-    <Compile Include="IEventTimeCodeFrame.cs" />
-    <Compile Include="IID3Tag.cs" />
-    <Compile Include="IStringFrame.cs" />
+    <Compile Include="Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RIFF\BinaryChunk.cs" />
-    <Compile Include="RIFF\Chunk.cs" />
-    <Compile Include="RIFF\FOURCC.cs" />
-    <Compile Include="RIFF\IID3Chunk.cs" />
-    <Compile Include="RIFF\ListChunk.cs" />
-    <Compile Include="RIFF\ListInfoChunk.cs" />
-    <Compile Include="RIFF\RIFFChunk.cs" />
-    <Compile Include="RIFF\RIFFMP3Tag.cs" />
-    <Compile Include="RIFF\StringChunk.cs" />
-    <Compile Include="StringFrameEncoder.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
