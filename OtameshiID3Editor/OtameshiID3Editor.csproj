@@ -102,6 +102,10 @@
       <Project>{d1edb875-6339-4022-b701-18eb62162cd0}</Project>
       <Name>AldenteaID3Editor</Name>
     </ProjectReference>
+    <ProjectReference Include="..\AldenteaID3Portable\AldenteaID3Portable.csproj">
+      <Project>{e096c043-34f1-4157-86b6-d9e5980e3d3b}</Project>
+      <Name>AldenteaID3Portable</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

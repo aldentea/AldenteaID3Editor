@@ -40,28 +40,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EventTimeCodeCollection.cs" />
-    <Compile Include="IBinaryFrame.cs" />
     <Compile Include="ID3Editor.cs" />
-    <Compile Include="ID3Reader.cs" />
-    <Compile Include="ID3v1Tag.cs" />
-    <Compile Include="ID3v22Tag.cs" />
-    <Compile Include="ID3v23Tag.cs" />
-    <Compile Include="ID3v2Tag.cs" />
-    <Compile Include="IEventTimeCodeFrame.cs" />
-    <Compile Include="IID3Tag.cs" />
-    <Compile Include="IStringFrame.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RIFF\BinaryChunk.cs" />
-    <Compile Include="RIFF\Chunk.cs" />
-    <Compile Include="RIFF\FOURCC.cs" />
-    <Compile Include="RIFF\IID3Chunk.cs" />
-    <Compile Include="RIFF\ListChunk.cs" />
-    <Compile Include="RIFF\ListInfoChunk.cs" />
-    <Compile Include="RIFF\RIFFChunk.cs" />
-    <Compile Include="RIFF\RIFFMP3Tag.cs" />
-    <Compile Include="RIFF\StringChunk.cs" />
-    <Compile Include="StringFrameEncoder.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AldenteaID3Portable\AldenteaID3Portable.csproj">
+      <Project>{e096c043-34f1-4157-86b6-d9e5980e3d3b}</Project>
+      <Name>AldenteaID3Portable</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

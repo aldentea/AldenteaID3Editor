@@ -40,7 +40,6 @@
   <ItemGroup>
     <Compile Include="EventTimeCodeCollection.cs" />
     <Compile Include="IBinaryFrame.cs" />
-    <Compile Include="ID3Editor.cs" />
     <Compile Include="ID3Reader.cs" />
     <Compile Include="ID3v1Tag.cs" />
     <Compile Include="ID3v22Tag.cs" />
