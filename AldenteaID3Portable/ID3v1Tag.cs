@@ -22,6 +22,8 @@ namespace Aldentea.ID3Portable
 		protected byte track_no = 0;
 		protected byte genre_no = 0x00;
 
+		static Encoding ascii = Encoding.GetEncoding("ASCII");
+
 		#region IID3Tag実装
 
 		#region *Artistプロパティ
@@ -211,32 +213,34 @@ namespace Aldentea.ID3Portable
 
 		// 05/15/2007 by aldente
 		#region *[static]ファイルにID3v1タグが存在するか否か(Exists)
-		public static bool Exists(string filename)
-		{
-			using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.Open)))
-			{
-				return Exists(reader);
-			}
+		//public static bool Exists(string filename)
+		//{
+		//	using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.Open)))
+		//	{
+		//		return Exists(reader);
+		//	}
 
-		}
+		//}
 
 		/// <summary>
 		/// ファイルにID3v1タグが存在するか否かをチェックします．
 		/// </summary>
 		/// <param name="reader"></param>
 		/// <returns></returns>
-		protected static bool Exists(BinaryReader reader)
+		public static bool Exists(BinaryReader reader)
 		{
 			// 末尾128バイトを読み込む．
-			FileInfo info = new FileInfo(((FileStream)reader.BaseStream).Name);
-			long size = info.Length;
-			if (size < 128)
-			{
-				return false;
-			}
-			reader.BaseStream.Seek(size - 128, SeekOrigin.Begin);
+			//FileInfo info = new FileInfo(((FileStream)reader.BaseStream).Name);
+			//long size = info.Length;
+			//if (size < 128)
+			//{
+			//	return false;
+			//}
+
+			reader.BaseStream.Seek(-128, SeekOrigin.End);
+			//reader.BaseStream.Seek(size - 128, SeekOrigin.Begin);
 			byte[] buf = reader.ReadBytes(3);
-			return (Encoding.ASCII.GetString(buf) == "TAG");
+			return (ascii.GetString(buf, 0, 3) == "TAG");
 		}
 		#endregion
 
@@ -264,13 +268,13 @@ namespace Aldentea.ID3Portable
 		/// </summary>
 		/// <param name="filename">ID3v1を読み込むファイルの名前．</param>
 		/// <returns>ID3v1Tagオブジェクト．タグが見つからなければnull．</returns>
-		public static ID3v1Tag ReadFile(string filename)
-		{
-			using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.Open)))
-			{
-				return Read(reader);
-			}
-		}
+		//public static ID3v1Tag ReadFile(string filename)
+		//{
+		//	using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.Open)))
+		//	{
+		//		return Read(reader);
+		//	}
+		//}
 		#endregion
 
 
@@ -359,7 +363,7 @@ namespace Aldentea.ID3Portable
 				newbuf[i] = buf[i];
 			}
 
-			return sjisEncoding.GetString(newbuf);
+			return sjisEncoding.GetString(newbuf, 0, n);
 		}
 		#endregion
 
@@ -375,63 +379,64 @@ namespace Aldentea.ID3Portable
 		/// 既存のタグは上書きされます．
 		/// </summary>
 		/// <param name="dstFilename">書き込み先のファイル名．</param>
-		public void WriteTo(string dstFilename)
-		{
-			if (!File.Exists(dstFilename))
-			{
-				// どうしてくれよう？
-			}
+		//public void WriteTo(string dstFilename)
+		//{
+		//	if (!File.Exists(dstFilename))
+		//	{
+		//		// どうしてくれよう？
+		//	}
 
-			//string tempFilename = "namunamu.mp3";
-			string tempFilename = Path.GetTempFileName();
-			using (BinaryReader reader = new BinaryReader(new FileStream(dstFilename, FileMode.Open)))
-			{
-				bool exists = Exists(reader);
+		//	//string tempFilename = "namunamu.mp3";
+		//	string tempFilename = Path.GetTempFileName();
+		//	using (BinaryReader reader = new BinaryReader(new FileStream(dstFilename, FileMode.Open)))
+		//	{
+		//		bool exists = Exists(reader);
 
-				using (BinaryWriter writer = new BinaryWriter(new FileStream(tempFilename, FileMode.CreateNew)))
-				{
-					reader.BaseStream.Seek(0, SeekOrigin.Begin);
-					writer.Write(reader.ReadBytes(Convert.ToInt32(reader.BaseStream.Length - (exists ? 128 : 0))));
-					writer.Write(this.GetBytes());
-				}
-			}
-			File.Delete(dstFilename);
-			File.Move(tempFilename, dstFilename);
-		}
+		//		using (BinaryWriter writer = new BinaryWriter(new FileStream(tempFilename, FileMode.CreateNew)))
+		//		{
+		//			reader.BaseStream.Seek(0, SeekOrigin.Begin);
+		//			writer.Write(reader.ReadBytes(Convert.ToInt32(reader.BaseStream.Length - (exists ? 128 : 0))));
+		//			writer.Write(this.GetBytes());
+		//		}
+		//	}
+		//	File.Delete(dstFilename);
+		//	File.Move(tempFilename, dstFilename);
+		//}
 		#endregion
 
 		// (0.1.0)とりあえずWriteのみasync化。
-		public async Task WriteToAsync(string dstFileName)
+		//public async Task WriteToAsync(string dstFileName)
+		public async Task WriteToAsync(ID3Reader reader, BinaryWriter tempWriter)
 		{
-			if (!File.Exists(dstFileName))
-			{
-				// どうしてくれよう？
-			}
+			//if (!File.Exists(dstFileName))
+			//{
+			//	// どうしてくれよう？
+			//}
 
 
-			string tempFilename = Path.GetTempFileName();
-			using (var tempFile = new FileStream(dstFileName, FileMode.Open))
-			{
+			//string tempFilename = Path.GetTempFileName();
+			//using (var tempFile = new FileStream(dstFileName, FileMode.Open))
+			//{
 			
-				using (BinaryReader reader = new BinaryReader(tempFile))
-				{
+				//using (BinaryReader reader = new BinaryReader(tempFile))
+				//{
 					bool exists = Exists(reader);
 
-					using (BinaryWriter writer = new BinaryWriter(new FileStream(tempFilename, FileMode.CreateNew)))
-					{
+					//using (BinaryWriter writer = new BinaryWriter(new FileStream(tempFilename, FileMode.CreateNew)))
+					//{
 						reader.BaseStream.Seek(0, SeekOrigin.Begin);
 
 						var bytes = reader.ReadBytes(Convert.ToInt32(reader.BaseStream.Length - (exists ? 128 : 0)));
-						await tempFile.WriteAsync(bytes, 0, bytes.Length);
+						await tempWriter.BaseStream.WriteAsync(bytes, 0, bytes.Length);
 
 						bytes = this.GetBytes();
-						writer.Write(bytes, 0, bytes.Length);
-					}
-				}
-			}
+						await tempWriter.BaseStream.WriteAsync(bytes, 0, bytes.Length);
+			//		}
+			//	}
+			//}
 
-			File.Delete(dstFileName);
-			File.Move(tempFilename, dstFileName);
+			//File.Delete(dstFileName);
+			//File.Move(tempFilename, dstFileName);
 
 		}
 
@@ -450,7 +455,7 @@ namespace Aldentea.ID3Portable
 			//MemoryStream ms = new MemoryStream(128);
 
 			// "TAG"(識別子)
-			Encoding.ASCII.GetBytes("TAG").CopyTo(content, 0);
+			ascii.GetBytes("TAG").CopyTo(content, 0);
 			//ms.Write(Encoding.ASCII.GetBytes("TAG"), 0, 3);
 			// title
 			//int n = title.Length;
@@ -466,7 +471,7 @@ namespace Aldentea.ID3Portable
 			// year
 			if (year > 0)
 			{
-				Encoding.ASCII.GetBytes(year.ToString()).CopyTo(content, 93);
+				ascii.GetBytes(year.ToString()).CopyTo(content, 93);
 			}
 
 			// comment
@@ -595,17 +600,18 @@ namespace Aldentea.ID3Portable
 			protected static int Exists(BinaryReader reader)
 			{
 				// 末尾128バイトを読み込む．
-				FileInfo info = new FileInfo(((FileStream)reader.BaseStream).Name);
-				long size = info.Length;
-				if (size < 128 + 9 + 6)
-				{
-					reader.BaseStream.Seek(size - 128 - 9 - 6, SeekOrigin.Begin);
+				//FileInfo info = new FileInfo(((FileStream)reader.BaseStream).Name);
+				//long size = info.Length;
+				//if (size < 128 + 9 + 6)
+				//{
+				//reader.BaseStream.Seek(size - 128 - 9 - 6, SeekOrigin.Begin);
+				reader.BaseStream.Seek(-9 - 6, SeekOrigin.End);
 					byte[] buf = reader.ReadBytes(9 + 6);
-					if (Encoding.ASCII.GetString(buf, 6, 9) == "LYRICS200")
+					if (ascii.GetString(buf, 6, 9) == "LYRICS200")
 					{
-						return Convert.ToInt32(Encoding.ASCII.GetString(buf, 0, 6));
+						return Convert.ToInt32(ascii.GetString(buf, 0, 6));
 					}
-				}
+				//}
 				return 0;
 			}
 			#endregion
@@ -617,7 +623,7 @@ namespace Aldentea.ID3Portable
 				reader.BaseStream.Seek(-size - 6 - 9, SeekOrigin.Current);
 
 				byte[] buf = reader.ReadBytes(11);
-				if (Encoding.ASCII.GetString(buf) == "LYRICSBEGIN")
+				if (ascii.GetString(buf, 0, 11) == "LYRICSBEGIN")
 				{
 					size -= 11;
 					// フィールドレコードを読み取る．

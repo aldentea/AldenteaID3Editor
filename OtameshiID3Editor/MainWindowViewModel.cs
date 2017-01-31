@@ -8,6 +8,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
+using Aldentea.ID3Portable;
+
 namespace Aldentea.ID3Editor.Otameshi
 {
 	using Mvvm;

@@ -29,7 +29,7 @@ namespace Aldentea.ID3Portable.RIFF
 			Byte[] buf = new byte[4];
 
 			reader.Read(buf, 0, 4);
-			if (Encoding.ASCII.GetString(buf) != RIFF_chunk_name)
+			if (ascii.GetString(buf, 0, 4) != RIFF_chunk_name)
 			{
 				// RIFF形式ぢゃない！
 				throw new Exception("RIFF形式ぢゃないよ！");
@@ -38,7 +38,7 @@ namespace Aldentea.ID3Portable.RIFF
 			int chunk_data_size = reader.ReadInt32();
 
 			reader.Read(buf, 0, 4);
-			string type_name = Encoding.ASCII.GetString(buf);
+			string type_name = ascii.GetString(buf, 0, 4);
 			// ※type_nameを検証？
 			if (type_name != data_type)
 			{
@@ -59,42 +59,42 @@ namespace Aldentea.ID3Portable.RIFF
 		#endregion
 
 		// 03/10/2008 by aldente
-		public void WriteToFile(string dstFileName)
-		{
-			using (FileStream writer = new FileStream(dstFileName, FileMode.Create))
-			{
-				Write(writer);
-			}
-		}
+		//public void WriteToFile(string dstFileName)
+		//{
+		//	using (FileStream writer = new FileStream(dstFileName, FileMode.Create))
+		//	{
+		//		Write(writer);
+		//	}
+		//}
 
 		// (0.1.0)
-		public async Task WriteToFileAsync(string dstFileName)
-		{
-			using (FileStream writer = new FileStream(dstFileName, FileMode.Create))
-			{
-				await WriteAsync(writer);
-			}
-		}
+		//public async Task WriteToFileAsync(string dstFileName)
+		//{
+		//	using (FileStream writer = new FileStream(dstFileName, FileMode.Create))
+		//	{
+		//		await WriteAsync(writer);
+		//	}
+		//}
 
 		// 03/10/2008 by aldente
-		public static RIFFChunk ReadFromFile(string srcFileName, string type_name)
-		{
-			using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
-			{
-				return new RIFFChunk(type_name, reader);
-			}
-		}
+		//public static RIFFChunk ReadFromFile(string srcFileName, string type_name)
+		//{
+		//	using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
+		//	{
+		//		return new RIFFChunk(type_name, reader);
+		//	}
+		//}
 
 		// 03/12/2008 by aldente : readerをStreamからBinaryReaderに変更．
 		// 03/11/2008 by aldente
-		public static RIFFChunk ReadFromFile(string srcFileName)
+		public static RIFFChunk ReadFromFile(BinaryReader reader)
 		{
-			using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
-			{
+			//using (BinaryReader reader = new BinaryReader(new FileStream(srcFileName, FileMode.Open)))
+			//{
 				byte[] buf = new byte[4];
 
 				reader.Read(buf, 0, 4);
-				if (Encoding.ASCII.GetString(buf) != RIFF_chunk_name)
+				if (ascii.GetString(buf, 0, 4) != RIFF_chunk_name)
 				{
 					// RIFF形式ぢゃない！
 					throw new Exception("RIFF形式ぢゃないよ！");
@@ -103,12 +103,12 @@ namespace Aldentea.ID3Portable.RIFF
 				int chunk_data_size = reader.ReadInt32();
 
 				reader.Read(buf, 0, 4);
-				string type_name = Encoding.ASCII.GetString(buf);
+				string type_name = ascii.GetString(buf, 0, 4);
 				// ※type_nameを検証？
 
 				return new RIFFChunk(type_name, reader, chunk_data_size);
 			}
-		}
+		//}
 	}
 	#endregion
 

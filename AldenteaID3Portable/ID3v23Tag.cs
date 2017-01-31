@@ -54,7 +54,9 @@ namespace Aldentea.ID3Portable
 			if (HaveExtendedHeader)
 			{
 				// ※拡張ヘッダを読み込む．
-				int size = System.Net.IPAddress.NetworkToHostOrder(reader.ReadInt32());
+				var size_bytes = reader.ReadBytes(4);
+				//int size = System.Net.IPAddress.NetworkToHostOrder(reader.ReadInt32());
+				int size = (size_bytes[0] << 24) + (size_bytes[1] << 16) + (size_bytes[2] << 8) + size_bytes[3];
 				extended_header = reader.ReadBytes(size);
 			}
 
@@ -234,7 +236,9 @@ namespace Aldentea.ID3Portable
 				: base(name)
 			{
 				// サイズ読み込み→エンディアン変換
-				int size = System.Net.IPAddress.NetworkToHostOrder(reader.ReadInt32());
+				//int size = System.Net.IPAddress.NetworkToHostOrder(reader.ReadInt32());
+				var size_bytes = reader.ReadBytes(4);
+				int size = (size_bytes[0] << 24) + (size_bytes[1] << 16) + (size_bytes[2] << 8) + size_bytes[3];
 				// フラグ読み込み
 				s_flags = new BitArray(reader.ReadBytes(1));
 				f_flags = new BitArray(reader.ReadBytes(1));
@@ -296,7 +300,7 @@ namespace Aldentea.ID3Portable
 				using (MemoryStream ms = new MemoryStream())
 				{
 					// 識別名出力
-					ms.Write(Encoding.ASCII.GetBytes(Name), 0, Name.Length);
+					ms.Write(ascii.GetBytes(Name), 0, Name.Length);
 
 					// サイズ出力
 					ms.Write(SizeToBytes(frame_size), 0, 4);

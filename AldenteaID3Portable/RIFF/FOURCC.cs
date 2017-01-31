@@ -13,6 +13,7 @@ namespace Aldentea.ID3Portable.RIFF
 	{
 		string body = string.Empty;
 		static System.Text.RegularExpressions.Regex NameConvertion = new System.Text.RegularExpressions.Regex(@"^[A-Za-z0-9 ]{0,4}$");
+		static Encoding ascii = Encoding.GetEncoding("ASCII");
 
 		// 03/06/2008 by aldente
 		#region *Valueプロパティ
@@ -58,7 +59,7 @@ namespace Aldentea.ID3Portable.RIFF
 		public byte[] GetBytes()
 		{
 			byte[] arrBody = new byte[4] { 0x20, 0x20, 0x20, 0x20 };
-			Encoding.ASCII.GetBytes(body, 0, 4, arrBody, 0);
+			ascii.GetBytes(body, 0, 4, arrBody, 0);
 			return arrBody;
 		}
 		#endregion

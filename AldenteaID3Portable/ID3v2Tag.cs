@@ -23,6 +23,8 @@ namespace Aldentea.ID3Portable
 		protected BitArray flags;
 		protected byte[] extended_header = null;
 
+		protected static Encoding ascii = Encoding.GetEncoding("ASCII");
+
 		#region *CharCodeプロパティ
 		/// <summary>
 		/// 出力時の文字コードを取得／設定します．
@@ -203,34 +205,31 @@ namespace Aldentea.ID3Portable
 
 		// 05/16/2007 by aldente
 		#region *[static]ファイルにID3v2タグが存在するか否か(Exists)
-		public static bool Exists(string filename)
-		{
-			//if (!File.Exists(filename))
-			//{
-			//  throw new FileNotFoundException();
-			//}
+		//public static bool Exists(string filename)
+		//{
+		//	//if (!File.Exists(filename))
+		//	//{
+		//	//  throw new FileNotFoundException();
+		//	//}
 
-			using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.Open)))
-			{
-				return Exists(reader);
-			}
+		//	using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.Open)))
+		//	{
+		//		return Exists(reader);
+		//	}
 
-		}
-		#endregion
+		//}
 
-		// 05/16/2007 by aldente
-		#region *[static]ファイルにID3v2タグが存在するか否か(Exists)
 		/// <summary>
 		/// ファイルにID3v2タグが存在するか否かをチェックします．
 		/// </summary>
 		/// <param name="reader"></param>
 		/// <returns></returns>
-		protected static bool Exists(BinaryReader reader)
+		public static bool Exists(BinaryReader reader)
 		{
 			// 先頭3バイトを読み込む．
 			reader.BaseStream.Seek(0, SeekOrigin.Begin);
 			byte[] buf = reader.ReadBytes(3);
-			return (Encoding.ASCII.GetString(buf) == "ID3");
+			return (ascii.GetString(buf, 0, 3) == "ID3");
 		}
 		#endregion
 
@@ -278,7 +277,7 @@ namespace Aldentea.ID3Portable
 		protected bool ReadFrame(ID3Reader reader)
 		{
 			// フレーム名を読み込む．
-			string name = Encoding.ASCII.GetString(reader.ReadBytes(frame_name_size));
+			string name = ascii.GetString(reader.ReadBytes(frame_name_size), 0, frame_name_size);
 			//string name = Encoding.ASCII.GetString(reader.ReadBytes((int)this.GetType().GetField("frame_name_size", System.Reflection.BindingFlags.FlattenHierarchy).GetValue(null)));
 			// "The frame ID made out of the characters capital A-Z and 0-9."
 			// なんだけど，半角空白を使う人がいるようなので，一応それにも対応しておく．
@@ -376,16 +375,17 @@ namespace Aldentea.ID3Portable
 
 		// 09/17/2014 by aldentea
 		#region *[static]ファイルからタグ全体のサイズを取得(GetSize)
-		public static int GetSize(string filename)
+		//public static int GetSize(string filename)
+		public static int GetSize(ID3Reader reader)
 		{
-			using (ID3Reader reader = new ID3Reader(File.Open(filename, FileMode.Open)))
-			{
+			//using (ID3Reader reader = new ID3Reader(File.Open(filename, FileMode.Open)))
+			//{
 				if (!Exists(reader))
 				{
 					return 0;
 				}
 				return Generate(reader, true).size;
-			}
+			//}
 		}
 		#endregion
 
@@ -397,16 +397,17 @@ namespace Aldentea.ID3Portable
 		/// </summary>
 		/// <param name="filename">ID3v2を読み込むファイルの名前．</param>
 		/// <returns>ID3v2Tagオブジェクト．タグが見つからなければnull．</returns>
-		public static ID3v2Tag ReadFile(string filename)
+		//public static ID3v2Tag ReadFile(string filename)
+		public static ID3v2Tag ReadFile(ID3Reader reader)
 		{
-			using (ID3Reader reader = new ID3Reader(File.Open(filename, FileMode.Open)))
-			{
+			//using (ID3Reader reader = new ID3Reader(File.Open(filename, FileMode.Open)))
+			//{
 				if (!Exists(reader))
 				{
 					return null;
 				}
 				return Generate(reader, false);
-			}
+			//}
 		}
 		#endregion
 
@@ -545,106 +546,106 @@ namespace Aldentea.ID3Portable
 		/// 既存のタグは上書きされます．
 		/// </summary>
 		/// <param name="dstFilename">書き込み先のファイル名．</param>
-		public void WriteTo(string dstFilename)
-		{
-			if (!File.Exists(dstFilename))
-			{
-				// どうしてくれよう？
-			}
+		//public void WriteTo(string dstFilename)
+		//{
+		//	if (!File.Exists(dstFilename))
+		//	{
+		//		// どうしてくれよう？
+		//	}
 
-			bool v1_exists = ID3v1Tag.Exists(dstFilename);
+		//	bool v1_exists = ID3v1Tag.Exists(dstFilename);
 
-			string tempFilename = Path.GetTempFileName();
+		//	string tempFilename = Path.GetTempFileName();
 
-			using (ID3Reader reader = new ID3Reader(new FileStream(dstFilename, FileMode.Open)))
-			{
-				bool exists = Exists(reader);
-				int old_tag_size = exists ? Generate(reader, true).GetTotalSize() : 0;
+		//	using (ID3Reader reader = new ID3Reader(new FileStream(dstFilename, FileMode.Open)))
+		//	{
+		//		bool exists = Exists(reader);
+		//		int old_tag_size = exists ? Generate(reader, true).GetTotalSize() : 0;
 
-				// 11/10/2008 by aldente
-				// FileModeをCreateNewからCreateに変更．
-				using (BinaryWriter writer = new BinaryWriter(new FileStream(tempFilename, FileMode.Create)))
-				{
-					ID3v1Tag v1Tag;
-					// タグを書き込む．
-					writer.Write(this.GetBytes(this.char_code, 0x100));
-					// 本体を書き込む．
-					reader.BaseStream.Seek(old_tag_size, SeekOrigin.Begin);
-					if (v1_exists)
-					{
-						writer.Write(reader.ReadBytes((int)reader.BaseStream.Length - old_tag_size - 128));
-						v1Tag = new ID3v1Tag(reader, false);
-					}
-					else
-					{
-						writer.Write(reader.ReadBytes((int)reader.BaseStream.Length - old_tag_size));
-						v1Tag = new ID3v1Tag();
-					}
-					// ID3v1タグを書き込む．
-					v1Tag.Title = this.Title;
-					v1Tag.Artist = this.Artist;
-					byte[] buf = v1Tag.GetBytes();
-					writer.Write(buf, 0, buf.Length);
+		//		// 11/10/2008 by aldente
+		//		// FileModeをCreateNewからCreateに変更．
+		//		using (BinaryWriter writer = new BinaryWriter(new FileStream(tempFilename, FileMode.Create)))
+		//		{
+		//			ID3v1Tag v1Tag;
+		//			// タグを書き込む．
+		//			writer.Write(this.GetBytes(this.char_code, 0x100));
+		//			// 本体を書き込む．
+		//			reader.BaseStream.Seek(old_tag_size, SeekOrigin.Begin);
+		//			if (v1_exists)
+		//			{
+		//				writer.Write(reader.ReadBytes((int)reader.BaseStream.Length - old_tag_size - 128));
+		//				v1Tag = new ID3v1Tag(reader, false);
+		//			}
+		//			else
+		//			{
+		//				writer.Write(reader.ReadBytes((int)reader.BaseStream.Length - old_tag_size));
+		//				v1Tag = new ID3v1Tag();
+		//			}
+		//			// ID3v1タグを書き込む．
+		//			v1Tag.Title = this.Title;
+		//			v1Tag.Artist = this.Artist;
+		//			byte[] buf = v1Tag.GetBytes();
+		//			writer.Write(buf, 0, buf.Length);
 
-				}
-			}
-			File.Delete(dstFilename);
-			File.Move(tempFilename, dstFilename);
-		}
+		//		}
+		//	}
+		//	File.Delete(dstFilename);
+		//	File.Move(tempFilename, dstFilename);
+		//}
 		#endregion
 
 		// (0.1.0)
-		public async Task WriteToAsync(string dstFileName)
+		public async Task WriteToAsync(ID3Reader reader, BinaryWriter tempWriter)
 		{
-			if (!File.Exists(dstFileName))
-			{
-				// どうしてくれよう？
-			}
+			//if (!File.Exists(dstFileName))
+			//{
+			//	// どうしてくれよう？
+			//}
 
-			bool v1_exists = ID3v1Tag.Exists(dstFileName);
+			bool v1_exists = ID3v1Tag.Exists(reader);
 
-			string tempFilename = Path.GetTempFileName();
+			//string tempFilename = Path.GetTempFileName();
 
-			using (ID3Reader reader = new ID3Reader(new FileStream(dstFileName, FileMode.Open)))
-			{
+			//using (ID3Reader reader = new ID3Reader(new FileStream(dstFileName, FileMode.Open)))
+			//{
 				bool exists = Exists(reader);
 				int old_tag_size = exists ? Generate(reader, true).GetTotalSize() : 0;
 
 				// 11/10/2008 by aldente
 				// FileModeをCreateNewからCreateに変更．
 
-				using (var tempFile = new FileStream(tempFilename, FileMode.Create))
-				{
+				//using (var tempFile = new FileStream(tempFilename, FileMode.Create))
+				//{
 					ID3v1Tag v1Tag;
 
 					// タグを書き込む。
 					var bytes = this.GetBytes(this.char_code, 0x100);
-					await tempFile.WriteAsync(bytes, 0, bytes.Length);
+					await tempWriter.BaseStream.WriteAsync(bytes, 0, bytes.Length);
 
 					// 本体を書き込む．
 					reader.BaseStream.Seek(old_tag_size, SeekOrigin.Begin);
 					if (v1_exists)
 					{
 						bytes = reader.ReadBytes((int)reader.BaseStream.Length - old_tag_size - 128);
-						await tempFile.WriteAsync(bytes, 0, bytes.Length);
+						await tempWriter.BaseStream.WriteAsync(bytes, 0, bytes.Length);
 						v1Tag = new ID3v1Tag(reader, false);
 					}
 					else
 					{
 						bytes = reader.ReadBytes((int)reader.BaseStream.Length - old_tag_size);
-						await tempFile.WriteAsync(bytes, 0, bytes.Length);
+						await tempWriter.BaseStream.WriteAsync(bytes, 0, bytes.Length);
 						v1Tag = new ID3v1Tag();
 					}
 					// ID3v1タグを書き込む．
 					v1Tag.Title = this.Title;
 					v1Tag.Artist = this.Artist;
 					byte[] buf = v1Tag.GetBytes();
-					await tempFile.WriteAsync(buf, 0, buf.Length);
+					await tempWriter.BaseStream.WriteAsync(buf, 0, buf.Length);
 
-				}
-			}
-			File.Delete(dstFileName);
-			File.Move(tempFilename, dstFileName);
+				//}
+			//}
+			//File.Delete(dstFileName);
+			//File.Move(tempFilename, dstFileName);
 			
 		}
 
@@ -677,16 +678,21 @@ namespace Aldentea.ID3Portable
 		{
 			using (MemoryStream ms = new MemoryStream())
 			{
-				ms.Write(Encoding.ASCII.GetBytes("ID3"), 0, 3);
+				ms.Write(ascii.GetBytes("ID3"), 0, 3);
 				ms.Write(GetVersion(), 0, 2);
 				ms.WriteByte(GetFlags());
-				ms.Write(
-					new System.Net.IPAddress(
-						System.Net.IPAddress.HostToNetworkOrder(
-							ConvertInt32ToSynchsafeInt(main_size)
-						)
-					).GetAddressBytes(), 0, 4);
-
+				//ms.Write(
+				//	new System.Net.IPAddress(
+				//		System.Net.IPAddress.HostToNetworkOrder(
+				//			ConvertInt32ToSynchsafeInt(main_size)
+				//		)
+				//	).GetAddressBytes(), 0, 4);
+				var converted_size = ConvertInt32ToSynchsafeInt(main_size);
+				var b0 = (byte)(converted_size >> 24);
+				var b1 = (byte)(converted_size << 8 >> 24);
+				var b2 = (byte)(converted_size << 16 >> 24);
+				var b3 = (byte)(converted_size % 256);
+				ms.Write(new byte[4] { b0, b1, b2, b3 }, 0, 4);
 				// ※拡張ヘッダは当分無視？
 
 				return ms.ToArray();

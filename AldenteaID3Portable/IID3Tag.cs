@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Aldentea.ID3Portable
 {
@@ -16,10 +17,10 @@ namespace Aldentea.ID3Portable
 		decimal StartPos { get; set; }
 		decimal StopPos { get; set; }
 
-		void WriteTo(string dstFilename);
+		//void WriteTo(string dstFilename);
 
 		// (0.1.0)
-		Task WriteToAsync(string dstFileName);
+		Task WriteToAsync(ID3Reader reader, BinaryWriter tempWriter);
 
 		void Merge(IID3Tag another_tag);
 	}

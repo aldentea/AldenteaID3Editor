@@ -5,6 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
+
+using Aldentea.ID3Portable;
+
 namespace Aldentea.ID3Editor
 {
 	public static class ID3Editor
@@ -30,25 +33,28 @@ namespace Aldentea.ID3Editor
 				return null;
 			}
 
-			// 拡張子が"rmp"の場合は，RIFFとして開く．
-			if (Path.GetExtension(fileName).ToLower().EndsWith("rmp"))
+			using (var reader = new ID3Reader(new FileStream(fileName, FileMode.Open)))
 			{
-				return RIFF.RIFFMP3Tag.ReadFromFile(fileName) as RIFF.RIFFMP3Tag;
-			}
-			else
-			{
-				// ID3v2をチェック．
-				tag = ID3v2Tag.ReadFile(fileName);
-				ID3v1Tag tag1 = ID3v1Tag.ReadFile(fileName);
-				if (tag != null)
+				// 拡張子が"rmp"の場合は，RIFFとして開く．
+				if (Path.GetExtension(fileName).ToLower().EndsWith("rmp"))
 				{
-					if (tag1 != null)
-					{
-						tag.Merge(tag1);
-					}
-					return tag;
+					return ID3Portable.RIFF.RIFFMP3Tag.ReadFromFile(reader) as ID3Portable.RIFF.RIFFMP3Tag;
 				}
-				return tag1;
+				else
+				{
+					// ID3v2をチェック．
+					tag = ID3v2Tag.ReadFile(reader);
+					ID3v1Tag tag1 = ID3v1Tag.Read(reader);
+					if (tag != null)
+					{
+						if (tag1 != null)
+						{
+							tag.Merge(tag1);
+						}
+						return tag;
+					}
+					return tag1;
+				}
 			}
 		}
 		#endregion
@@ -70,21 +76,21 @@ namespace Aldentea.ID3Editor
 		/// <param name="stoppos">曲の停止位置(秒)．</param>
 		/// <param name="filename">タグを書き込むmp3ファイル名．</param>
 		/// <param name="charCode">文字コードを指定するbyte型数値．現在未使用？</param>
-		public static void UpdateInfo(string title, string artist, decimal sabipos, decimal startpos, decimal stoppos, string filename, byte charCode)
-		{
-			IID3Tag tag = ReadFile(filename);
-			if (tag == null)
-			{
-				tag = new ID3v23Tag();
-			}
-			tag.Title = title;
-			tag.Artist = artist;
-			tag.SabiPos = sabipos;
-			tag.StartPos = startpos;
-			tag.StopPos = stoppos;
+		//public static void UpdateInfo(string title, string artist, decimal sabipos, decimal startpos, decimal stoppos, string filename, byte charCode)
+		//{
+		//	IID3Tag tag = ReadFile(filename);
+		//	if (tag == null)
+		//	{
+		//		tag = new ID3v23Tag();
+		//	}
+		//	tag.Title = title;
+		//	tag.Artist = artist;
+		//	tag.SabiPos = sabipos;
+		//	tag.StartPos = startpos;
+		//	tag.StopPos = stoppos;
 
-			tag.WriteTo(filename);
-		}
+		//	tag.WriteTo(filename);
+		//}
 
 		/// <summary>
 		/// 指定したタグの情報を指定したファイルに書き込みます．
@@ -92,51 +98,58 @@ namespace Aldentea.ID3Editor
 		/// </summary>
 		/// <param name="fileName"></param>
 		/// <param name="newTag"></param>
-		public static void UpdateInfo(string fileName, IID3Tag newTag)
-		{
-			var original_tag = ReadFile(fileName);
-			if (original_tag == null)
-			{
-				newTag.WriteTo(fileName);
-			}
-			else
-			{
-				// 元のタグに新しいタグの情報を書き込んで保存する．
-				// 全てを更新していいのか？
-				original_tag.Title = newTag.Title;
-				original_tag.Artist = newTag.Artist;
-				original_tag.SabiPos = newTag.SabiPos;
-				//tag.StartPos = startpos;
-				//tag.StopPos = stoppos;
-				original_tag.WriteTo(fileName);
-			}
+		//public static void UpdateInfo(string fileName, IID3Tag newTag)
+		//{
+		//	var original_tag = ReadFile(fileName);
+		//	if (original_tag == null)
+		//	{
+		//		newTag.WriteTo(fileName);
+		//	}
+		//	else
+		//	{
+		//		// 元のタグに新しいタグの情報を書き込んで保存する．
+		//		// 全てを更新していいのか？
+		//		original_tag.Title = newTag.Title;
+		//		original_tag.Artist = newTag.Artist;
+		//		original_tag.SabiPos = newTag.SabiPos;
+		//		//tag.StartPos = startpos;
+		//		//tag.StopPos = stoppos;
+		//		original_tag.WriteTo(fileName);
+		//	}
 
-		}
+		//}
 
 		#endregion
 
-		public static async Task UpdateAsync(string fileName, IID3Tag newTag)
+		public static async Task UpdateAsync(string dstFileName, IID3Tag newTag)
 		{
-			var original_tag = ReadFile(fileName);
-			if (original_tag == null)
+			var tempFileName = Path.GetTempFileName();
+				var original_tag = ReadFile(dstFileName);
+			using (var reader = new ID3Reader(new FileStream(dstFileName, FileMode.Open)))
 			{
-				await newTag.WriteToAsync(fileName);
-			}
-			else
-			{
-				// 元のタグに新しいタグの情報を書き込んで保存する．
-				// 全てを更新していいのか？
-				original_tag.Title = newTag.Title;
-				original_tag.Artist = newTag.Artist;
-				original_tag.SabiPos = newTag.SabiPos;
-				//tag.StartPos = startpos;
-				//tag.StopPos = stoppos;
+				using (var tempWriter = new BinaryWriter(new FileStream(tempFileName, FileMode.Create)))
+				{
+					if (original_tag == null)
+					{
+						await newTag.WriteToAsync(reader, tempWriter);
+					}
+					else
+					{
+						// 元のタグに新しいタグの情報を書き込んで保存する．
+						// 全てを更新していいのか？
+						original_tag.Title = newTag.Title;
+						original_tag.Artist = newTag.Artist;
+						original_tag.SabiPos = newTag.SabiPos;
+						//tag.StartPos = startpos;
+						//tag.StopPos = stoppos;
 
-				await original_tag.WriteToAsync(fileName);
+						await original_tag.WriteToAsync(reader, tempWriter);
+					}
+				}
 			}
-
+			File.Delete(dstFileName);
+			File.Move(tempFileName, dstFileName);
 		}
-
 
 		// 09/17/2014 by aldentea
 		#region *[static]冒頭にあるタグのサイズを取得(GetHeaderTagSize)
@@ -158,7 +171,11 @@ namespace Aldentea.ID3Editor
 			}
 			else
 			{
-				return ID3v2Tag.GetSize(fileName);
+				using (var reader = new ID3Reader(new FileStream(fileName, FileMode.Open)))
+				{
+
+					return ID3v2Tag.GetSize(reader);
+				}
 			}
 		}
 		#endregion
