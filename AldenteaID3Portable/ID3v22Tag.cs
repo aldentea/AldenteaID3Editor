@@ -32,6 +32,14 @@ namespace Aldentea.ID3Portable
 		}
 		#endregion
 
+		// (0.2.0)
+		public static async Task<ID3v22Tag> GenerateAsync(ID3Reader reader, bool only_header)
+		{
+			var tag = new ID3v22Tag();
+			await tag.InitializeAsync(reader, only_header);
+			return tag;
+		}
+
 		#region *[override]フレームを追加(AddFrame)
 		/// <summary>
 		/// タグにフレームを追加します．

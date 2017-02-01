@@ -46,6 +46,14 @@ namespace Aldentea.ID3Portable
 		}
 		#endregion
 
+		// (0.2.0)
+		public static async Task<ID3v23Tag> GenerateAsync(ID3Reader reader, bool only_header)
+		{
+			var tag = new ID3v23Tag();
+			await tag.InitializeAsync(reader, only_header);
+			return tag;
+		}
+
 		// 05/16/2007 by aldente
 		#region *[override]ヘッダの後半を読み込み(ReadHeader)
 		protected override void ReadHeader(ID3Reader reader)

@@ -203,6 +203,16 @@ namespace Aldentea.ID3Portable
 		}
 		#endregion
 
+		// (0.2.0)
+		protected async Task InitializeAsync(ID3Reader reader, bool only_header)
+		{
+			await ReadHeaderAsync(reader);
+			if (!only_header)
+			{
+				await ReadFramesAsync(reader);
+			}
+		}
+
 		// 05/16/2007 by aldente
 		#region *[static]ファイルにID3v2タグが存在するか否か(Exists)
 		//public static bool Exists(string filename)
@@ -233,6 +243,16 @@ namespace Aldentea.ID3Portable
 		}
 		#endregion
 
+		public static async Task<bool> ExistsAsync(BinaryReader reader)
+		{
+			// 先頭3バイトを読み込む．
+			const int length = 3;
+			reader.BaseStream.Seek(0, SeekOrigin.Begin);
+			var buf = new List<byte>().ToArray();
+			await reader.BaseStream.ReadAsync(buf, 0, length);
+			return (ascii.GetString(buf, 0, length) == "ID3");
+		}
+
 		// 12/25/2007 by aldente
 		#region *他のタグとマージ(Merge)
 		public void Merge(IID3Tag another_tag)
@@ -260,6 +280,13 @@ namespace Aldentea.ID3Portable
 		}
 		#endregion
 
+		// (0.2.0)
+		protected virtual async Task ReadHeaderAsync(ID3Reader reader)
+		{
+			flags = new BitArray(reader.ReadBytes(1));
+			size = await reader.Read4ByteSynchsafeIntegerAsync();
+		}
+
 		#region *全フレーム読み込み(ReadFrames)
 		protected void ReadFrames(ID3Reader reader)
 		{
@@ -272,6 +299,18 @@ namespace Aldentea.ID3Portable
 			}
 		}
 		#endregion
+
+		// (0.2.0)
+		protected async Task ReadFramesAsync(ID3Reader reader)
+		{
+			while (reader.BaseStream.Position < size + base_header_size)
+			{
+				if (!(await ReadFrameAsync(reader)))
+				{
+					break;
+				}
+			}
+		}
 
 		#region *1つのフレームを読み込み(ReadFrame)
 		protected bool ReadFrame(ID3Reader reader)
@@ -292,6 +331,25 @@ namespace Aldentea.ID3Portable
 			return true;
 		}
 		#endregion
+
+		// (0.2.0)
+		protected async Task<bool> ReadFrameAsync(ID3Reader reader)
+		{
+			// フレーム名を読み込む．
+			string name = ascii.GetString( await reader.ReadBytesAsync(frame_name_size), 0, frame_name_size);
+			//string name = Encoding.ASCII.GetString(reader.ReadBytes((int)this.GetType().GetField("frame_name_size", System.Reflection.BindingFlags.FlattenHierarchy).GetValue(null)));
+			// "The frame ID made out of the characters capital A-Z and 0-9."
+			// なんだけど，半角空白を使う人がいるようなので，一応それにも対応しておく．
+			string format = string.Format("[A-Z0-9 ]{{{0}}}", frame_name_size);
+			if (!Regex.IsMatch(name, format))
+			{
+				// おそらくパディング領域に踏み込んだ場合．
+				return false;
+			}
+
+			AddFrame(name, reader);
+			return true;
+		}
 
 		protected abstract int AddFrame(string name, ID3Reader reader);
 
@@ -411,6 +469,17 @@ namespace Aldentea.ID3Portable
 		}
 		#endregion
 
+		public static async Task<ID3v2Tag> ReadAsync(ID3Reader reader)
+		{
+			if (!(await ExistsAsync(reader)))
+			{
+				return null;
+			}
+			return await GenerateAsync(reader, false);
+		}
+
+
+
 		// 05/17/2007 by aldente
 		#region *タグオブジェクトを生成(Generate)
 		/// <summary>
@@ -438,6 +507,29 @@ namespace Aldentea.ID3Portable
 			}
 		}
 		#endregion
+
+
+		private static async Task<ID3v2Tag> GenerateAsync(ID3Reader reader, bool only_header)
+		{
+			// readerは"ID3"まで読み取ったものとする．
+			byte[] version = reader.ReadBytes(2);
+			switch (version[0])
+			{
+				case 0x02:
+					//return new ID3v22Tag(reader, only_header);
+					return await ID3v22Tag.GenerateAsync(reader, only_header);
+				case 0x03:
+					//return new ID3v23Tag(reader, only_header);
+					return await ID3v23Tag.GenerateAsync(reader, only_header);
+				case 0x04:
+					throw new Exception("残念ながら未対応ですm(_ _)m");
+				//tag = new ID3v23Tag();
+				//break;
+				default:
+					throw new Exception("見たことがないバージョンでチュね～");
+			}
+		}
+
 
 		#region *指定したフレームの値を取得(FindValue)
 		/// <summary>
@@ -608,7 +700,7 @@ namespace Aldentea.ID3Portable
 
 			//using (ID3Reader reader = new ID3Reader(new FileStream(dstFileName, FileMode.Open)))
 			//{
-				bool exists = Exists(reader);
+				bool exists = await ExistsAsync(reader);
 				int old_tag_size = exists ? Generate(reader, true).GetTotalSize() : 0;
 
 				// 11/10/2008 by aldente

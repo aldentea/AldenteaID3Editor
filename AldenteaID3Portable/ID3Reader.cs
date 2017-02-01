@@ -44,6 +44,20 @@ namespace Aldentea.ID3Portable
 		}
 		#endregion
 
+		// (0.2.0)
+		public async Task<int> Read4ByteSynchsafeIntegerAsync()
+		{
+			const int digits = 4;
+			byte[] buf = await ReadBytesAsync(digits);
+			int value = 0;
+			for (int n = 0; n < digits; n++)
+			{
+				value += buf[digits - 1 - n] << (7 * n);
+			}
+			return value;
+		}
+
+
 		#region *3バイト整数を読み込み(Read3ByteInteger)
 		/// <summary>
 		/// 3バイトのビッグエンディアン整数を読み込みます．
@@ -51,7 +65,7 @@ namespace Aldentea.ID3Portable
 		/// <returns>読み込んだ整数値．</returns>
 		public int Read3ByteInteger()
 		{
-			int digits = 3;
+			const int digits = 3;
 			byte[] buf = ReadBytes(digits);
 			int value = 0;
 			for (int n = 0; n < digits; n++)
@@ -61,6 +75,28 @@ namespace Aldentea.ID3Portable
 			return value;
 		}
 		#endregion
+
+		// (0.2.0)
+		public async Task<int> Read3ByteIntegerAsync()
+		{
+			const int digits = 3;
+			byte[] buf = await ReadBytesAsync(digits);
+			int value = 0;
+			for (int n = 0; n < digits; n++)
+			{
+				value += buf[digits - 1 - n] << (8 * n);
+			}
+			return value;
+		}
+
+		// (0.2.0)
+		public async Task<byte[]> ReadBytesAsync(int length)
+		{
+			byte[] buf = new List<byte>(length).ToArray();
+			// 非同期に読み取る方法がこれしかない。
+			await BaseStream.ReadAsync(buf, 0, length);
+			return buf;
+		}
 
 	}
 	#endregion
