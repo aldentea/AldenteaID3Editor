@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EventTimeCodeCollection.cs" />
+    <Compile Include="Helpers\BinaryReaderExtension.cs" />
     <Compile Include="IBinaryFrame.cs" />
     <Compile Include="ID3Reader.cs" />
     <Compile Include="ID3v1Tag.cs" />

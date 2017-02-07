@@ -8,6 +8,9 @@ using System.IO;
 
 namespace Aldentea.ID3Portable.RIFF
 {
+	// (0.2.1)
+	using Helpers;
+
 	// 03/06/2008 by aldente
 	#region BinaryChunkクラス
 	public class BinaryChunk : Chunk
@@ -75,6 +78,18 @@ namespace Aldentea.ID3Portable.RIFF
 			}
 		}
 		#endregion
+
+		// (0.2.1)
+		public override async Task ReadBodyAsync(BinaryReader reader, int size)
+		{
+			data = await reader.ReadBytesAsync(size);
+
+			if (size % 2 == 1)
+			{
+				// パディング分だけ読み取り位置を進める．
+				await reader.ReadBytesAsync(1);
+			}
+		}
 
 		#endregion
 

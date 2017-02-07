@@ -8,6 +8,10 @@ using System.IO;
 
 namespace Aldentea.ID3Portable.RIFF
 {
+
+	// (0.2.1)
+	using Helpers;
+
 	// 03/07/2008 by aldente
 	#region ListChunkクラス
 	public class ListChunk : Chunk
@@ -40,34 +44,31 @@ namespace Aldentea.ID3Portable.RIFF
 		{
 			data_type.Value = type_name;
 		}
-		#endregion
 
 		// 03/11/2008 by aldente
-		#region *コンストラクタ(ListChunk:2/4)
 		protected ListChunk(string chunk_id, string type_name)
 			: base(chunk_id)
 		{
 			data_type.Value = type_name;
 		}
-		#endregion
 
 		// 03/10/2008 by aldente
-		#region *コンストラクタ(listChunk:3/4)
 		public ListChunk(string type_name, BinaryReader reader, int data_size)
 			: base(list_chunk_name, reader, data_size)
 		{
 			data_type.Value = type_name;
 		}
-		#endregion
 
 		// 03/11/2008 by aldente
-		#region *コンストラクタ(listChunk:4/4)
 		public ListChunk(string chunk_id, string type_name, BinaryReader reader, int data_size)
 			: base(chunk_id, reader, data_size)
 		{
 			data_type.Value = type_name;
 		}
 		#endregion
+
+
+
 
 		// 03/10/2008 by aldente
 		#region *子チャンクを追加(AddChild)
@@ -170,7 +171,6 @@ namespace Aldentea.ID3Portable.RIFF
 			
 				reader.Read(buf, 0, 4);
 				string chunk_id = ascii.GetString(buf, 0, 4);
-				//int chunk_data_size = ReadInt32(reader);
 				int chunk_data_size = reader.ReadInt32();
 
 				if (chunk_id == list_chunk_name)
@@ -204,6 +204,48 @@ namespace Aldentea.ID3Portable.RIFF
 			}
 		}
 		#endregion
+
+		// (0.2.1)
+		public override async Task ReadBodyAsync(BinaryReader reader, int size)
+		{
+			long end_of_chunk = reader.BaseStream.Position + size;
+
+			while (reader.BaseStream.Position < end_of_chunk)
+			{
+				Chunk new_child_chunk = null;
+
+				string chunk_id = await reader.ReadStringAsync(4);
+				int chunk_data_size = await reader.ReadInt32Async();
+
+				if (chunk_id == list_chunk_name)
+				{
+					string type_name = await reader.ReadStringAsync(4);
+					// タイプ名によって生成するチャンク型を決定．
+					TypeInfo new_chunk_type = GetListChunkType(type_name);
+					if (new_chunk_type.IsSubclassOf(typeof(ListChunk)))
+					{
+						var constructor = new_chunk_type.DeclaredConstructors.First(c => c.GetParameters().Length == 1);
+						new_child_chunk = (Chunk)constructor.Invoke(new object[] { chunk_id });
+						await new_child_chunk.ReadBodyAsync(reader, chunk_data_size);
+					}
+				}
+				else
+				{
+					// 識別子によって生成するチャンク型を決定．
+					TypeInfo new_chunk_type = GetChunkType(chunk_id);
+					if (new_chunk_type.IsSubclassOf(typeof(Chunk)))
+					{
+						var constructor = new_chunk_type.DeclaredConstructors.First(c => c.GetParameters().Length == 1);
+						new_child_chunk = (Chunk)constructor.Invoke(new object[] { chunk_id });
+						await new_child_chunk.ReadBodyAsync(reader, chunk_data_size);
+					}
+				}
+				if (new_child_chunk != null)
+				{
+					AddChild(new_child_chunk);
+				}
+			}
+		}
 
 		#endregion
 

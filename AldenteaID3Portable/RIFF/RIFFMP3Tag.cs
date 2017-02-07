@@ -43,9 +43,14 @@ namespace Aldentea.ID3Portable.RIFF
 		}
 		#endregion
 
-		public RIFFMP3Tag(BinaryReader reader) : base(DataType, reader)
-		{
-		}
+		// (0.2.1)
+		public RIFFMP3Tag() : base(DataType)
+		{ }
+
+		// ※これいるの？
+		//public RIFFMP3Tag(BinaryReader reader) : base(DataType, reader)
+		//{
+		//}
 
 		// 03/10/2008 by aldente
 		//public new static RIFFMP3Tag ReadFromFile(string srcFileName)

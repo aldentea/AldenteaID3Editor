@@ -59,6 +59,43 @@ namespace Aldentea.ID3Editor
 		}
 		#endregion
 
+		// (0.2.1)
+		public static async Task<IID3Tag> ReadFileAsync(string fileName)
+		{
+			IID3Tag tag;
+			//SongInfo info = new SongInfo();
+
+			if (!File.Exists(fileName))
+			{
+				// ファイルがないぞ！
+				return null;
+			}
+
+			using (var reader = new ID3Reader(new FileStream(fileName, FileMode.Open)))
+			{
+				// 拡張子が"rmp"の場合は，RIFFとして開く．
+				if (Path.GetExtension(fileName).ToLower().EndsWith("rmp"))
+				{
+					return await ID3Portable.RIFF.RIFFMP3Tag.ReadFromAsync(reader) as ID3Portable.RIFF.RIFFMP3Tag;
+				}
+				else
+				{
+					// ID3v2をチェック．
+					tag = await ID3v2Tag.ReadAsync(reader);
+					ID3v1Tag tag1 = await ID3v1Tag.ReadAsync(reader);
+					if (tag != null)
+					{
+						if (tag1 != null)
+						{
+							tag.Merge(tag1);
+						}
+						return tag;
+					}
+					return tag1;
+				}
+			}
+		}
+
 		// 11/25/2014 by aldentea : 2引数版のバグ(保存がなされていなかった)を修正．
 		// 09/03/2013 by aldentea : 2引数版を用意．
 		// 01/17/2008 by aldente : ～Accessorに移植．
@@ -124,7 +161,7 @@ namespace Aldentea.ID3Editor
 		public static async Task UpdateAsync(string dstFileName, IID3Tag newTag)
 		{
 			var tempFileName = Path.GetTempFileName();
-				var original_tag = ReadFile(dstFileName);
+			var original_tag = await ReadFileAsync(dstFileName);
 			using (var reader = new ID3Reader(new FileStream(dstFileName, FileMode.Open)))
 			{
 				using (var tempWriter = new BinaryWriter(new FileStream(tempFileName, FileMode.Create)))
@@ -179,6 +216,27 @@ namespace Aldentea.ID3Editor
 			}
 		}
 		#endregion
+
+		// (0.2.1)
+		public static async Task<int> GetHeaderTagSizeAsync(string fileName)
+		{
+			// 拡張子が"rmp"の場合は，RIFFとして開く．
+			if (Path.GetExtension(fileName).ToLower().EndsWith("rmp"))
+			{
+				// ※こちらではHM001の問題が発生するかどうかわからないので，
+				// とりあえず0を返しておく．
+				return 0;
+				//return RIFFMP3Tag.ReadFromFile(fileName) as RIFFMP3Tag;
+			}
+			else
+			{
+				using (var reader = new ID3Reader(new FileStream(fileName, FileMode.Open)))
+				{
+
+					return await ID3v2Tag.GetSizeAsync(reader);
+				}
+			}
+		}
 
 	}
 }

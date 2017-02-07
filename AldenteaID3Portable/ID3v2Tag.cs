@@ -11,6 +11,9 @@ using System.Text.RegularExpressions;
 
 namespace Aldentea.ID3Portable
 {
+	// (0.2.1)
+	using Helpers;
+
 	#region *[abstract]ID3v2Tagクラス
 	public abstract class ID3v2Tag : IID3Tag
 	{
@@ -245,12 +248,7 @@ namespace Aldentea.ID3Portable
 
 		public static async Task<bool> ExistsAsync(BinaryReader reader)
 		{
-			// 先頭3バイトを読み込む．
-			const int length = 3;
-			reader.BaseStream.Seek(0, SeekOrigin.Begin);
-			var buf = new List<byte>().ToArray();
-			await reader.BaseStream.ReadAsync(buf, 0, length);
-			return (ascii.GetString(buf, 0, length) == "ID3");
+			return (await reader.ReadStringAsync(3)) == "ID3"; 
 		}
 
 		// 12/25/2007 by aldente
@@ -336,7 +334,8 @@ namespace Aldentea.ID3Portable
 		protected async Task<bool> ReadFrameAsync(ID3Reader reader)
 		{
 			// フレーム名を読み込む．
-			string name = ascii.GetString( await reader.ReadBytesAsync(frame_name_size), 0, frame_name_size);
+			string name = await reader.ReadStringAsync(frame_name_size);
+
 			//string name = Encoding.ASCII.GetString(reader.ReadBytes((int)this.GetType().GetField("frame_name_size", System.Reflection.BindingFlags.FlattenHierarchy).GetValue(null)));
 			// "The frame ID made out of the characters capital A-Z and 0-9."
 			// なんだけど，半角空白を使う人がいるようなので，一応それにも対応しておく．
@@ -446,6 +445,16 @@ namespace Aldentea.ID3Portable
 			//}
 		}
 		#endregion
+
+		// (0.2.1)
+		public static async Task<int> GetSizeAsync(ID3Reader reader)
+		{
+			if (!await ExistsAsync(reader))
+			{
+				return 0;
+			}
+			return (await GenerateAsync(reader, true)).size;
+		}
 
 		// 05/16/2007 by aldente : 未対応バージョンにはApplicationExceptionを発生するように変更．
 		#region *[static]ファイルからID3v2タグを読み込む(ReadFile)
@@ -686,6 +695,7 @@ namespace Aldentea.ID3Portable
 		//}
 		#endregion
 
+		// (0.2.1) ID3v1の読み込みを非同期化。
 		// (0.1.0)
 		public async Task WriteToAsync(ID3Reader reader, BinaryWriter tempWriter)
 		{
@@ -694,14 +704,14 @@ namespace Aldentea.ID3Portable
 			//	// どうしてくれよう？
 			//}
 
-			bool v1_exists = ID3v1Tag.Exists(reader);
+			bool v1_exists = await ID3v1Tag.ExistsAsync(reader);
 
 			//string tempFilename = Path.GetTempFileName();
 
 			//using (ID3Reader reader = new ID3Reader(new FileStream(dstFileName, FileMode.Open)))
 			//{
 				bool exists = await ExistsAsync(reader);
-				int old_tag_size = exists ? Generate(reader, true).GetTotalSize() : 0;
+				int old_tag_size = exists ? (await GenerateAsync(reader, true)).GetTotalSize() : 0;
 
 				// 11/10/2008 by aldente
 				// FileModeをCreateNewからCreateに変更．
@@ -720,7 +730,7 @@ namespace Aldentea.ID3Portable
 					{
 						bytes = reader.ReadBytes((int)reader.BaseStream.Length - old_tag_size - 128);
 						await tempWriter.BaseStream.WriteAsync(bytes, 0, bytes.Length);
-						v1Tag = new ID3v1Tag(reader, false);
+						v1Tag = await ID3v1Tag.GenerateAsync(reader, false);
 					}
 					else
 					{

@@ -60,6 +60,12 @@ namespace Aldentea.ID3Portable.RIFF
 			tag = ID3v1Tag.Read(reader);
 		}
 
+		// (0.2.1)
+		public override async Task ReadBodyAsync(BinaryReader reader, int size)
+		{
+			tag = await ID3v1Tag.ReadAsync(reader);
+		}
+
 		#endregion
 
 		// 03/12/2008 by aldente

@@ -10,6 +10,8 @@ using System.Text.RegularExpressions;
 namespace Aldentea.ID3Portable
 {
 
+	using Helpers;
+
 	#region ID3v1Tagクラス
 	public class ID3v1Tag : IID3Tag
 	{
@@ -202,14 +204,20 @@ namespace Aldentea.ID3Portable
 		public ID3v1Tag()
 		{
 		}
-		#endregion
 
-		#region *コンストラクタ(ID3v1Tag)
 		public ID3v1Tag(BinaryReader reader, bool alreadyReadIdentifier)
 		{
 			Read(reader, alreadyReadIdentifier);
 		}
 		#endregion
+
+		// (0.2.1)
+		public static async Task<ID3v1Tag> GenerateAsync(BinaryReader reader, bool alreadyReadIdentifier)
+		{
+			var tag = new ID3v1Tag();
+			await tag.ReadAsync(reader, alreadyReadIdentifier);
+			return tag;
+		}
 
 		// 05/15/2007 by aldente
 		#region *[static]ファイルにID3v1タグが存在するか否か(Exists)
@@ -243,6 +251,14 @@ namespace Aldentea.ID3Portable
 			return (ascii.GetString(buf, 0, 3) == "TAG");
 		}
 		#endregion
+
+		// (0.2.1)
+		public static async Task<bool> ExistsAsync(BinaryReader reader)
+		{
+			reader.BaseStream.Seek(-128, SeekOrigin.End);
+			return await reader.ReadStringAsync(3) == "TAG";
+		}
+
 
 		// 12/25/2007 by aldente
 		#region *他のタグとマージ(Merge)
@@ -292,6 +308,19 @@ namespace Aldentea.ID3Portable
 		}
 		#endregion
 
+		// (0.2.1)
+		public static async Task<ID3v1Tag> ReadAsync(BinaryReader reader)
+		{
+			if (await ExistsAsync(reader))
+			{
+				return await ID3v1Tag.GenerateAsync(reader, true);
+			}
+			else
+			{
+				return null;
+			}
+		}
+
 
 		// 04/04/2007 by aldente
 		#region *読み込み(Read)
@@ -335,9 +364,50 @@ namespace Aldentea.ID3Portable
 		}
 		#endregion
 
+		// (0.2.1)
+		protected async Task ReadAsync(BinaryReader reader, bool alreadyReadIdentifier)
+		{
+			if (!alreadyReadIdentifier)
+			{
+				// 最初の3バイト("TAG")をスキップする．
+				await reader.ReadBytesAsync(3);
+			}
+
+			// title
+			byte[] buf = await reader.ReadBytesAsync(30);
+			title = GetString(buf);
+			// artist
+			buf = await reader.ReadBytesAsync(30);
+			artist = GetString(buf);
+			// album_name
+			buf = await reader.ReadBytesAsync(30);
+			album_name = GetString(buf);
+			// year
+			buf = await reader.ReadBytesAsync(4);
+			try
+			{
+				year = Convert.ToInt32(GetString(buf));
+			}
+			catch (FormatException)
+			{
+				year = 0;
+			}
+			// comment
+			buf = await reader.ReadBytesAsync(30);
+			if (buf[28] == 0x00 && buf[29] != 0x00)
+			{
+				// ID3v1.1
+				track_no = buf[29];
+			}
+			comment = GetString(buf);
+			genre_no = (await reader.ReadBytesAsync(1))[0];
+		}
+
+
+		// (0.2.1) static化。
 		// 04/04/2007 by aldente
 		#region *バイト列から文字列を取得(GetString)
-		protected string GetString(byte[] buf)
+		protected static string GetString(byte[] buf)
 		{
 			// バイト列から文字列を取り出す．0x00以降は読まない．
 			Encoding sjisEncoding = Encoding.GetEncoding("shift-jis");
@@ -589,6 +659,19 @@ namespace Aldentea.ID3Portable
 			}
 			#endregion
 
+			// (0.2.1)
+			public static async Task<Lyrics3Tag> Generate(BinaryReader reader)
+			{
+				int size = await Lyrics3Tag.ExistsAsync(reader);
+				if (size > 0)
+				{
+					var tag = new Lyrics3Tag();
+					await tag.ReadLyrics3Async(reader, size);
+					return tag;
+				}
+				return null;
+			}
+
 			// 06/17/2008 by aldente
 			#region *[static]ファイルにID3v1タグが存在するか否か(Exists)
 			/// <summary>
@@ -616,6 +699,24 @@ namespace Aldentea.ID3Portable
 			}
 			#endregion
 
+			// (0.2.1)
+			/// <summary>
+			/// Lyric3タグが存在するか否かを確認し、存在するならばそのサイズを、さもなければ0を返します。
+			/// </summary>
+			/// <param name="reader"></param>
+			/// <returns></returns>
+			protected static async Task<int> ExistsAsync(BinaryReader reader)
+			{
+				reader.BaseStream.Seek(-9 - 6, SeekOrigin.End);
+				byte[] buf = await reader.ReadBytesAsync(9 + 6);
+				if (ascii.GetString(buf, 6, 9) == "LYRICS200")
+				{
+					return Convert.ToInt32(ascii.GetString(buf, 0, 6));
+				}
+				return 0;
+			}
+
+
 			// 06/19/2008 by aldente
 			private void ReadLyrics3(BinaryReader reader, int size)
 			{
@@ -635,6 +736,30 @@ namespace Aldentea.ID3Portable
 						int data_size = Convert.ToInt32(reader.ReadBytes(5).ToString());
 						// データを読み込む
 						string data = reader.ReadBytes(data_size).ToString();
+						fields[f_name] = data;
+						size -= (3 + 5 + size);
+					}
+				}
+			}
+
+			// (0.2.1)
+			private async Task ReadLyrics3Async(BinaryReader reader, int size)
+			{
+				// ファイルポインタはLyrics3タグの末尾にある．
+				reader.BaseStream.Seek(-size - 6 - 9, SeekOrigin.Current);
+
+				if ((await reader.ReadStringAsync(11)) == "LYRICSBEGIN")
+				{
+					size -= 11;
+					// フィールドレコードを読み取る．
+					while (size > 0)
+					{
+						// フィールドIDを読み込む
+						string f_name = await reader.ReadStringAsync(3);
+						// データサイズを読み込む
+						int data_size = Convert.ToInt32((await reader.ReadBytesAsync(5)).ToString());
+						// データを読み込む
+						string data = await reader.ReadStringAsync(data_size);
 						fields[f_name] = data;
 						size -= (3 + 5 + size);
 					}

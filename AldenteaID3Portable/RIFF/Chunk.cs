@@ -152,6 +152,9 @@ namespace Aldentea.ID3Portable.RIFF
 
 		protected abstract void ReadBody(BinaryReader reader, int size);
 
+		// (0.2.1)
+		public abstract Task ReadBodyAsync(BinaryReader reader, int size);
+
 		// 03/10/2008 by aldente
 		#region *チャンクを書き込み(Write)
 		public void Write(Stream writer)

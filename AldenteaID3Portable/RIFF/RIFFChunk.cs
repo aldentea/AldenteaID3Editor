@@ -7,6 +7,8 @@ using System.IO;
 
 namespace Aldentea.ID3Portable.RIFF
 {
+	// (0.2.1)
+	using Helpers;
 
 	// 03/10/2008 by aldente
 	#region RIFFChunkクラス
@@ -19,38 +21,36 @@ namespace Aldentea.ID3Portable.RIFF
 		public RIFFChunk(string data_type) : base(RIFF_chunk_name, data_type)
 		{
 		}
-		#endregion
 
+
+		// ※これいるの？
 		// 03/12/2008 by aldente : readerをStreamからBinaryReaderに変更．
 		// 03/10/2008 by aldente
-		#region *コンストラクタ(RIFFChunk:2/2)
-		public RIFFChunk(string data_type, BinaryReader reader) : this(data_type)
-		{
-			Byte[] buf = new byte[4];
+		//public RIFFChunk(string data_type, BinaryReader reader) : this(data_type)
+		//{
+		//	Byte[] buf = new byte[4];
 
-			reader.Read(buf, 0, 4);
-			if (ascii.GetString(buf, 0, 4) != RIFF_chunk_name)
-			{
-				// RIFF形式ぢゃない！
-				throw new Exception("RIFF形式ぢゃないよ！");
-			}
-			//int chunk_data_size = ReadInt32(reader);
-			int chunk_data_size = reader.ReadInt32();
+		//	reader.Read(buf, 0, 4);
+		//	if (ascii.GetString(buf, 0, 4) != RIFF_chunk_name)
+		//	{
+		//		// RIFF形式ぢゃない！
+		//		throw new Exception("RIFF形式ぢゃないよ！");
+		//	}
+		//	//int chunk_data_size = ReadInt32(reader);
+		//	int chunk_data_size = reader.ReadInt32();
 
-			reader.Read(buf, 0, 4);
-			string type_name = ascii.GetString(buf, 0, 4);
-			// ※type_nameを検証？
-			if (type_name != data_type)
-			{
-				throw new Exception(string.Format("データタイプが'{0}'ぢゃないよ！", data_type));
-			}
+		//	reader.Read(buf, 0, 4);
+		//	string type_name = ascii.GetString(buf, 0, 4);
+		//	// ※type_nameを検証？
+		//	if (type_name != data_type)
+		//	{
+		//		throw new Exception(string.Format("データタイプが'{0}'ぢゃないよ！", data_type));
+		//	}
 
-			ReadBody(reader, chunk_data_size - 4);
-		}
-		#endregion
+		//	ReadBody(reader, chunk_data_size - 4);
+		//}
 
 		// 03/10/2008 by aldente
-		#region *コンストラクタ(RIFFChunk:2/2)
 		public RIFFChunk(string data_type, BinaryReader reader, int chunk_data_size)
 			: this(data_type)
 		{
@@ -109,6 +109,26 @@ namespace Aldentea.ID3Portable.RIFF
 				return new RIFFChunk(type_name, reader, chunk_data_size);
 			}
 		//}
+
+			// (0.2.1)
+		public static async Task<RIFFChunk> ReadFromAsync(BinaryReader reader)
+		{
+			if ((await reader.ReadStringAsync(4)) != RIFF_chunk_name)
+			{
+				// RIFF形式ぢゃない！
+				throw new Exception("RIFF形式ぢゃないよ！");
+			}
+			//int chunk_data_size = ReadInt32(reader);
+			int chunk_data_size = await reader.ReadInt32Async();
+
+			string type_name = await reader.ReadStringAsync(4);
+			// ※type_nameを検証？
+
+			var chunk = new RIFFChunk(type_name);
+			await chunk.ReadBodyAsync(reader, chunk_data_size);
+			return chunk;
+		}
+
 	}
 	#endregion
 
